@@ -2,3 +2,4 @@
 # Circuit Description
 # AGC
 # Component Notes
+# VK7IAN
