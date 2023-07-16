@@ -4,8 +4,8 @@
  * Copyright 2023 Ian Mitchell VK7IAN
  * Version 1.0
  *
- * Uses
- * ====
+ * Uses Earle Philhower arduino package
+ * ====================================
  *  
  * https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
  *
@@ -35,14 +35,13 @@
 #err set SI5351_PLL_VCO_MIN to 440000000 in si5351.h
 #endif
 
-//#define MDPR_DEBUG
-//#define DEFAULT_FREQUENCY 7105000ul
-//#define DEFAULT_FREQUENCY 7040000ul
-//#define DEFAULT_MODE      MODE_LSB
-//#define DEFAULT_BAND      BAND_40
-#define DEFAULT_FREQUENCY 14060000ul
-#define DEFAULT_MODE      MODE_USB
-#define DEFAULT_BAND      BAND_20M
+//#define MBPR_DEBUG
+#define DEFAULT_FREQUENCY 7100000ul
+#define DEFAULT_MODE      MODE_LSB
+#define DEFAULT_BAND      BAND_40M
+//#define DEFAULT_FREQUENCY 14060000ul
+//#define DEFAULT_MODE      MODE_USB
+//#define DEFAULT_BAND      BAND_20M
 #define MIN_FREQUENCY     3500000UL
 #define MAX_FREQUENCY     30000000UL
 
@@ -176,7 +175,27 @@ static void set_filter(const uint32_t filter)
 
 static const radio_mode_t get_mode(const uint32_t f)
 {
+  if (f==3573000ul)
+  {
+    return MODE_USB;
+  }
+  if (f==3578000ul)
+  {
+    return MODE_USB;
+  }
+  if (f==5357000ul)
+  {
+    return MODE_USB;
+  }
   if (f==7074000ul)
+  {
+    return MODE_USB;
+  }
+  if (f==7078000ul)
+  {
+    return MODE_USB;
+  }
+  if (f==8176000ul)
   {
     return MODE_USB;
   }
@@ -245,7 +264,7 @@ void setup()
   digitalWrite(LED_BUILTIN_1,HIGH);
   digitalWrite(LED_BUILTIN_2,HIGH);
   digitalWrite(LED_BUILTIN_3,HIGH);
-#ifdef MDPR_DEBUG
+#ifdef MBPR_DEBUG
   for (int i=0;i<5;i++)
   {
     delay(500);
@@ -281,7 +300,7 @@ void setup()
   radio.divisor = get_divisor(radio.frequency);
   radio.filter = get_filter(radio.frequency);
   set_filter(radio.filter);
-#ifdef MDPR_DEBUG
+#ifdef MBPR_DEBUG
   for (int i=0;i<5;i++)
   {
     delay(500);
@@ -503,13 +522,12 @@ void loop1()
   if ((current_frequency != new_frequency) || (current_mode != new_mode))
   {
     current_frequency = new_frequency;
-    current_mode = new_mode;
     const uint32_t new_divisor = get_divisor(current_frequency);
     const uint64_t f = current_frequency * SI5351_FREQ_MULT;
     const uint64_t p = current_frequency * new_divisor * SI5351_FREQ_MULT;
     si5351.set_freq_manual(f,p,SI5351_CLK0);
     si5351.set_freq_manual(f,p,SI5351_CLK1);
-    switch (current_mode)
+    switch (new_mode)
     {
       case MODE_LSB:
       {
@@ -524,9 +542,10 @@ void loop1()
         break;
       }
     }
-    if (current_divisor != new_divisor)
+    if ((current_divisor != new_divisor) || (current_mode != new_mode))
     {
       current_divisor = new_divisor;
+      current_mode = new_mode;
       si5351.pll_reset(SI5351_PLLA);
     }
     update_display = true;
