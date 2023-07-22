@@ -30,6 +30,7 @@
 #include <ResponsiveAnalogRead.h>
 #include <Tiny4kOLED.h>
 #include "agc.h"
+#include "smeter.h"
 
 #if SI5351_PLL_VCO_MIN != 440000000
 #err set SI5351_PLL_VCO_MIN to 440000000 in si5351.h
@@ -377,8 +378,10 @@ void loop()
   static button_state_t button_state = BUTTON_STATE_WAIT_PRESS;
 
   // process AGC
-  uint32_t peak_signal = AGC::peak((int16_t)analogRead(PIN_AGCIN)-2048l);
-  const int32_t agc_pwm = AGC::attenuation(peak_signal);
+  const int16_t ac_signal = AGC::dc((int16_t)analogRead(PIN_AGCIN)-2048l);
+  const uint32_t peak_signal = SMETER::peak(ac_signal);
+  const uint32_t agc_peak = AGC::peak(ac_signal);
+  const int32_t agc_pwm = AGC::attenuation(agc_peak);
   analogWrite(PIN_AGCOUT,agc_pwm);
 
   // process tuning
@@ -568,7 +571,7 @@ void loop1()
     oled.setCursor(0,2);
     oled.print("-3-5-7-9-+");
     const uint8_t sig = min(new_signal,63);
-    oled.bitmap(0, 3, sig, 4, AGC::meter);
+    oled.bitmap(0, 3, sig, 4, SMETER::meter);
     oled.switchFrame();
     delay(20);
   }
