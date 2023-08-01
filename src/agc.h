@@ -2076,7 +2076,7 @@ namespace AGC
     }
     else
     {
-      uint32_t decay = p>>16;
+      uint32_t decay = p>>17;
       if (decay==0) decay = 1;
       if (p>decay) p -= decay;
     }
