@@ -2,7 +2,7 @@
  * Multiband Phasing Direct Conversion SSB Receiver
  *
  * Copyright 2023 Ian Mitchell VK7IAN
- * Version 1.0
+ * Version 1.1
  *
  * Uses Earle Philhower arduino package
  * ====================================
@@ -40,9 +40,6 @@
 #define DEFAULT_FREQUENCY 7100000ul
 #define DEFAULT_MODE      MODE_LSB
 #define DEFAULT_BAND      BAND_40M
-//#define DEFAULT_FREQUENCY 14060000ul
-//#define DEFAULT_MODE      MODE_USB
-//#define DEFAULT_BAND      BAND_20M
 #define MIN_FREQUENCY     3500000UL
 #define MAX_FREQUENCY     30000000UL
 
@@ -64,7 +61,7 @@
 #define PIN_ENCA   D9
 #define PIN_ENCB  D10
 
-// for built in LED, low is on
+// for built-in LED, low is on
 #define LED_BUILTIN_1 16u
 #define LED_BUILTIN_2 17u
 #define LED_BUILTIN_3 25u
@@ -95,10 +92,18 @@ enum button_state_t
 
 static const float band_gain[] = 
 {
-  2500.0f,
-  5000.0f,
-  10000.0f,
-  10000.0f
+  700.0f,
+  1400.0f,
+  2800.0f,
+  2800.0f
+};
+
+static const uint32_t band_S9[] = 
+{
+  70ul,
+  150ul,
+  232ul,
+  232ul
 };
 
 volatile static struct
@@ -379,7 +384,6 @@ void loop()
 
   // process AGC
   const int16_t ac_signal = AGC::dc((int16_t)analogRead(PIN_AGCIN)-2048l);
-  const uint32_t peak_signal = SMETER::peak(ac_signal);
   const uint32_t agc_peak = AGC::peak(ac_signal);
   const int32_t agc_pwm = AGC::attenuation(agc_peak);
   analogWrite(PIN_AGCOUT,agc_pwm);
@@ -483,21 +487,41 @@ void loop()
   }
 
   // signal strength
-  // 50 pixels is S9
+  // 44 pixels is S9
   // measured S9
-  // 20m: 840mv PP, Gain 6000
-  // 40m: 600mv PP, Gain 4300
-  // 80m: 250mv PP, Gain 1770
-  const float signal10 = (float)peak_signal * (3.3f / 4096.0f / 10.0f) / band_gain[radio.filter];
-  const float dbm = 30.0f + 20.0f * log10f(signal10) + 111.0f;
-  const uint32_t smeter_signal = dbm<0?0:roundf(dbm);
+  // with 1k resistor
+  // 20m: 116 (peak) 200mv PP, Gain 1400
+  // 40m: 74  (peak) 100mv PP, Gain 700
+  // 80m: 34  (peak) 250mv PP, Gain 350
+
+  // with 500 ohm resistor
+  // 20m: 232 (peak) 200mv PP, Gain 2800
+  // 40m: 150 (peak) 100mv PP, Gain 1400
+  // 80m: 70  (peak) 250mv PP, Gain 700
+
+  float smeter_raw = 0.0f;
+  const uint32_t peak_signal = SMETER::peak(ac_signal);
+  const uint32_t S9 = band_S9[radio.filter];
+  if (peak_signal>S9)
+  {
+    const float signal10 = (float)peak_signal * (3.3f / 4096.0f / 10.0f) / band_gain[radio.filter];
+    const float dbm = 30.0f + 20.0f * log10f(signal10);
+    smeter_raw = dbm + 117.0f;
+  }
+  else
+  {
+    smeter_raw = (float)peak_signal * (44.0f / (float)S9);
+  }
+  const uint32_t smeter_signal = smeter_raw<0?0:roundf(smeter_raw);
 
   // pass the data to core1
-  mutex_enter_blocking(&radio_metadata);
-  set_frequency = tuned_frequency;
-  set_mode = radio.mode;
-  set_signal = smeter_signal;
-  mutex_exit(&radio_metadata);
+  if (mutex_try_enter(&radio_metadata,NULL))
+  {
+    set_frequency = tuned_frequency;
+    set_mode = radio.mode;
+    set_signal = smeter_signal;
+    mutex_exit(&radio_metadata);
+  }
 
   // set mute delay
   if (radio.mute)
@@ -570,6 +594,11 @@ void loop1()
     oled.print(new_mode==MODE_LSB?"LSB":"USB");
     oled.setCursor(0,2);
     oled.print("-3-5-7-9-+");
+/*
+    memset(sz_frequency,0,sizeof(sz_frequency));
+    ultoa(the_peak,sz_frequency,10);
+    oled.print(sz_frequency);
+*/
     const uint8_t sig = min(new_signal,63);
     oled.bitmap(0, 3, sig, 4, SMETER::meter);
     oled.switchFrame();
