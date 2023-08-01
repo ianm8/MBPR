@@ -74,18 +74,20 @@ namespace SMETER
   static const uint32_t peak(const int16_t sig)
   {
     static uint32_t p = 0;
-    const uint32_t level = ((uint32_t)abs(sig))<<12; // 128 * 2000 = 256,000, 4096 * 2000 = 8,192,000
+    const uint32_t abs_raw = abs(sig);
+    const uint32_t abs_sig = abs_raw>5?abs_raw-5:0;
+    const uint32_t level = abs_sig<<14;
     if (level>p)
     {
       p = level;
     }
     else
     {
-      uint32_t decay = p>>14;
+      uint32_t decay = p>>15;
       if (decay==0) decay = 1;
       if (p>decay) p -= decay;
     }
-    return p>>12;
+    return p>>14;
   }
 }
 #endif
