@@ -2068,19 +2068,18 @@ namespace AGC
 
   static const uint32_t peak(const int16_t sig)
   {
+    static const uint32_t DECAY_POWER = 10u;
     static uint32_t p = 0;
-    const uint32_t level = ((uint32_t)abs(sig))<<12; // 128 * 2000 = 256,000, 4096 * 2000 = 8,192,000
+    const uint32_t level = ((uint32_t)abs(sig))<<DECAY_POWER;
     if (level>p)
     {
       p = level;
     }
     else
     {
-      uint32_t decay = p>>17;
-      if (decay==0) decay = 1;
-      if (p>decay) p -= decay;
+      if (p) p--;
     }
-    return p>>12;
+    return p>>DECAY_POWER;
   }
 
   static const uint8_t attenuation(const uint32_t peak)
