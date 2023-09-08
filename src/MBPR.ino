@@ -2,7 +2,7 @@
  * Multiband Phasing Direct Conversion SSB Receiver
  *
  * Copyright 2023 Ian Mitchell VK7IAN
- * Version 1.1
+ * Version 1.2
  *
  * Uses Earle Philhower arduino package
  * ====================================
