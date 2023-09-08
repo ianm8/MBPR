@@ -73,10 +73,11 @@ namespace SMETER
 
   static const uint32_t peak(const int16_t sig)
   {
+    static const uint32_t DECAY_POWER = 14u;
     static uint32_t p = 0;
     const uint32_t abs_raw = abs(sig);
     const uint32_t abs_sig = abs_raw>5?abs_raw-5:0;
-    const uint32_t level = abs_sig<<14;
+    const uint32_t level = abs_sig<<DECAY_POWER;
     if (level>p)
     {
       p = level;
@@ -87,7 +88,7 @@ namespace SMETER
       if (decay==0) decay = 1;
       if (p>decay) p -= decay;
     }
-    return p>>14;
+    return p>>DECAY_POWER;
   }
 }
 #endif
