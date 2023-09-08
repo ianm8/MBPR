@@ -5,3 +5,9 @@ This is an HF SSB direct conversion receiver that tunes from 3.5MHz to 30MHz. Qu
 # Component Notes
 # VK7IAN
 # Build (Arduino IDE Settings)
+Arduino IDE build settings are as follows:
+
+ * Optimize: -O2
+ * USB Stack: No USB
+
+Other settings are as default.
