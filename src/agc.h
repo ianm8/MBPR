@@ -2086,7 +2086,8 @@ namespace AGC
   {
     // given the signal peak value,
     // return the appropriate attenuation value
-    return agc_tab[peak & 0x7ff];
+    // watch out for the abs(-2048) edge case!
+    return agc_tab[min(peak,2047u)];
   }
 }
 #endif
