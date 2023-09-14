@@ -4,6 +4,7 @@ This is an HF SSB direct conversion receiver that tunes from 3.5MHz to 30MHz. Qu
 # AGC
 # Component Notes
 # VK7IAN
+If you would like to customise the splash (start-up) page, just uncomment the YOUR_CALL macro definition (in MBPR.ino), set it to your callsign and recompile the project. 
 # Build (Arduino IDE Settings)
 Arduino IDE build settings are as follows:
 
