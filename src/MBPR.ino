@@ -2,7 +2,7 @@
  * Multiband Phasing Direct Conversion SSB Receiver
  *
  * Copyright 2023 Ian Mitchell VK7IAN
- * Version 1.2
+ * Version 1.3
  *
  * Uses Earle Philhower arduino package
  * ====================================
@@ -594,11 +594,6 @@ void loop1()
     oled.print(new_mode==MODE_LSB?"LSB":"USB");
     oled.setCursor(0,2);
     oled.print("-3-5-7-9-+");
-/*
-    memset(sz_frequency,0,sizeof(sz_frequency));
-    ultoa(the_peak,sz_frequency,10);
-    oled.print(sz_frequency);
-*/
     const uint8_t sig = min(new_signal,63);
     oled.bitmap(0, 3, sig, 4, SMETER::meter);
     oled.switchFrame();
