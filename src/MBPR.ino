@@ -2,7 +2,7 @@
  * Multiband Phasing Direct Conversion SSB Receiver
  *
  * Copyright 2023 Ian Mitchell VK7IAN
- * Version 1.3
+ * Version 1.4
  *
  * Uses Earle Philhower arduino package
  * ====================================
@@ -580,14 +580,43 @@ void loop1()
 
   if (update_display || (current_signal != new_signal))
   {
+    uint8_t position = 0u;
     current_signal = new_signal;
     char sz_frequency[16] = "";
     memset(sz_frequency,0,sizeof(sz_frequency));
     ultoa(new_frequency,sz_frequency,10);
-    const uint8_t fp = strlen(sz_frequency)==7?10u:7u;
+    if (new_frequency<10000000u)
+    {
+      // 7 digits
+      // 3555000 -> 3.555.000
+      // 0123456    012345678
+      sz_frequency[8] = sz_frequency[6];
+      sz_frequency[7] = sz_frequency[5];
+      sz_frequency[6] = sz_frequency[4];
+      sz_frequency[5] = '.';
+      sz_frequency[4] = sz_frequency[3];
+      sz_frequency[3] = sz_frequency[2];
+      sz_frequency[2] = sz_frequency[1];
+      sz_frequency[1] = '.';
+      position = 3u;
+    }
+    else
+    {
+      // 8 digits
+      // 14222000 -> 14.222.000
+      // 01234567    0123456789
+      sz_frequency[9] = sz_frequency[7];
+      sz_frequency[8] = sz_frequency[6];
+      sz_frequency[7] = sz_frequency[5];
+      sz_frequency[6] = '.';
+      sz_frequency[5] = sz_frequency[4];
+      sz_frequency[4] = sz_frequency[3];
+      sz_frequency[3] = sz_frequency[2];
+      sz_frequency[2] = '.';
+    }
     oled.clear();
     oled.setFont(FONT6X8);
-    oled.setCursor(fp,0);
+    oled.setCursor(position,0);
     oled.print(sz_frequency);
     oled.setCursor(0,1);
     oled.print("Mode:  ");
